@@ -13,6 +13,7 @@ import torchvision.models as M
 import onnxruntime as ort
 from onnxruntime import InferenceSession as Model
 import numpy as np
+from datetime import datetime
 from numpy import ndarray
 from PIL import Image
 from PIL.Image import Image as PILImage
@@ -31,12 +32,109 @@ IMAGENET_MEAN = np.asarray([[[0.485, 0.456, 0.406]]], dtype=np.float32)
 IMAGENET_STD  = np.asarray([[[0.229, 0.224, 0.225]]], dtype=np.float32)
 
 SUPPORT_MODELS = [
+  # .alexnet
+  'alexnet',
+  # .convnext
+  'convnext_tiny',
+  'convnext_small',
+  'convnext_base',
+  'convnext_large',
+  # .densenet
+  'densenet121',
+  'densenet161',
+  'densenet169',
+  'densenet201',
+  # .efficientnet
+  "efficientnet_b0",
+  'efficientnet_b1',
+  'efficientnet_b2',
+  'efficientnet_b3',
+  'efficientnet_b4',
+  'efficientnet_b5',
+  'efficientnet_b6',
+  'efficientnet_b7',
+  'efficientnet_v2_s',
+  'efficientnet_v2_m',
+  'efficientnet_v2_l',
+  # .googlenet
+  'googlenet',
+  # .inception
+  'inception_v3',
+  # .mnasnet
+  'mnasnet0_5',
+  'mnasnet0_75',
+  'mnasnet1_0',
+  'mnasnet1_3',
+  # .mobilenet
   'mobilenet_v2',
   'mobilenet_v3_small',
   'mobilenet_v3_large',
+  # .regnet
+  'regnet_y_400mf',
+  'regnet_y_800mf',
+  'regnet_y_1_6gf',
+  'regnet_y_3_2gf',
+  'regnet_y_8gf',
+  'regnet_y_16gf',
+  'regnet_y_32gf',
+  'regnet_y_128gf',
+  'regnet_x_400mf',
+  'regnet_x_800mf',
+  'regnet_x_1_6gf',
+  'regnet_x_3_2gf',
+  'regnet_x_8gf',
+  'regnet_x_16gf',
+  'regnet_x_32gf',
+  # .resnet
+  'resnet18',
+  'resnet34',
+  'resnet50',
+  'resnet101',
+  'resnet152',
+  'resnext50_32x4d',
+  'resnext101_32x8d',
+  'resnext101_64x4d',
+  'wide_resnet50_2',
+  'wide_resnet101_2',
+  # .shufflenetv2
+  'shufflenet_v2_x0_5',
+  'shufflenet_v2_x1_0',
+  'shufflenet_v2_x1_5',
+  'shufflenet_v2_x2_0',
+  # .squeezenet
+  'squeezenet1_0',
+  'squeezenet1_1'
+  # .vgg
+  'vgg11',
+  'vgg11_bn',
+  'vgg13',
+  'vgg13_bn',
+  'vgg16',
+  'vgg16_bn',
+  'vgg19',
+  'vgg19_bn',
+  # .vision_transformer
+  'vit_b_16',
+  'vit_b_32',
+  'vit_l_16',
+  'vit_l_32',
+  'vit_h_14',
+  # .swin_transformer
+  'swin_t',
+  'swin_s',
+  'swin_b',
+  'swin_v2_t',
+  'swin_v2_s',
+  'swin_v2_b',
+  # .maxvit
+  'maxvit_t'
 ]
 DEFAULT_MODEL = 'mobilenet_v3_small'
 
+MAX_MODEL_CACHE = 5
+
+def now_ts() -> int:
+  return int(datetime.now().timestamp())
 
 def softmax(x:ndarray) -> ndarray:
   x -= np.max(x, axis=-1, keepdims=True)
@@ -44,6 +142,11 @@ def softmax(x:ndarray) -> ndarray:
   return expx / np.sum(expx, axis=-1, keepdims=True)
 
 def run_model(name:str, img:PILImage) -> Tuple[Pred, str]:
+  if not name:
+    return {}, 'Error: model name is empty'
+  if not img:
+    return {}, 'Error: image is empty'
+  
   ts_start = time()
   img = img.resize((IMG_SIZE, IMG_SIZE))
   im = np.asarray(img, dtype=np.float32) / 255.0
@@ -71,23 +174,35 @@ def run_model(name:str, img:PILImage) -> Tuple[Pred, str]:
   return results, info
 
 
-# TODO: add MAX_MODEL_CACHE
-model_cache: Dict[str, Model] = {}
+model_cache: Dict[str, Tuple[Model, int]] = {}
 
+def update_cache():
+  if len(model_cache) < MAX_MODEL_CACHE:
+    return
+  else:
+    sorted_cache = sorted(model_cache.items(), key=lambda x: x[1][1])
+    print(sorted_cache)
+    name = sorted_cache[0][0]
+    del model_cache[name]
+    return
+  
 def get_model(name:str):
   if name in model_cache:
-    model = model_cache[name]
+    model, _ = model_cache[name]
+    model_cache[name] = model, now_ts()
     return model
 
   fp = MODEL_PATH / f'{name}.onnx'
   if fp.exists():
     model = ort.InferenceSession(fp)
-    model_cache[name] = model
+    update_cache()
+    model_cache[name] = model, now_ts()
     return model
 
   fp = convert_model(name)
   model = ort.InferenceSession(fp)
-  model_cache[name] = model
+  update_cache()
+  model_cache[name] = model, now_ts()
   return model
 
 def convert_model(name:str) -> Path:

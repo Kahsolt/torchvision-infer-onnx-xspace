@@ -17,9 +17,22 @@ license: mit
 
 ⚪ classification
 
-- [x] mobilenet_v2
-- [x] mobilenet_v3_small
-- [x] mobilenet_v3_large
+- [x] alexnet
+- [x] convnext
+- [x] densenet
+- [x] efficeientnet
+- [x] googlenet
+- [x] inception
+- [x] mnasnet
+- [x] mobilenet
+- [x] regnet
+- [x] resnet
+- [x] shufflenetv2
+- [x] squeezenet
+- [x] vgg
+- [x] vision_transformer
+- [x] swin_transformer
+- [x] maxvit    
 
 ----
 by Armit
