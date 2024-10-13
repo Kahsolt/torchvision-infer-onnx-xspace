@@ -103,7 +103,7 @@ SUPPORT_MODELS = [
   'shufflenet_v2_x2_0',
   # .squeezenet
   'squeezenet1_0',
-  'squeezenet1_1'
+  'squeezenet1_1',
   # .vgg
   'vgg11',
   'vgg11_bn',
@@ -127,7 +127,7 @@ SUPPORT_MODELS = [
   'swin_v2_s',
   'swin_v2_b',
   # .maxvit
-  'maxvit_t'
+  'maxvit_t',
 ]
 DEFAULT_MODEL = 'mobilenet_v3_small'
 
@@ -143,7 +143,7 @@ def softmax(x:ndarray) -> ndarray:
 
 def run_model(name:str, img:PILImage) -> Tuple[Pred, str]:
   if not name:
-    return {}, 'Error: model name is empty'
+    name = DEFAULT_MODEL
   if not img:
     return {}, 'Error: image is empty'
   
