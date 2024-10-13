@@ -1,0 +1,5 @@
+onnx==1.16.1 -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+onnxruntime==1.19.2 -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+
+# compatible with pytorch==2.1, see https://github.com/pytorch/vision
+torchvision==0.16 -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple

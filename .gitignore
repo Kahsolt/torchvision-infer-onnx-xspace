@@ -1,3 +1,9 @@
 # meta
 .vscode/
 __pycache__/
+
+# weights
+models/
+
+# cache
+gradio_cached_examples/
